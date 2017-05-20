@@ -6,14 +6,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 import gerar.arquivo.Arquivo;
-import gerar.variavel.aleatoria.GeradorVariavelAleatoria;
 
 public class SimulacaoFilaBanco {
 
 	// 2) Tempo desde a última chegada (minutos)
 	private List<Double> tDeseAUltimaChegada;
-	// Tempo de chegada no relógio
-	private ArrayList<Double> tChegadaRelogio;
+	// 3) Tempo de chegada no relógio
+	private List<Double> tChegadaRelogio;
 	// 4) Tempo de serviço ou tempo de atendimento (minutos)
 	private List<Double> tServico;
 	// 5) Tempo de início do serviço (minutos)
@@ -41,28 +40,161 @@ public class SimulacaoFilaBanco {
 	 *            Quantidades de clientes que será feita asimulação
 	 */
 	public SimulacaoFilaBanco(int numeroDeClientes) {
-		if (numeroDeClientes <= 20)
+		if (numeroDeClientes <= this. MAXIMO_DE_CLIENTES)
 			this.numeroDeClientes = numeroDeClientes;
 		else
 			System.out.println("Tem que ser no máximo 20");
+	}
 
-		// Gerar 2a coluna
-		gerarTDesdeUltimaChegadaPacote(12);
-		// Gerar 3a coluna
-		gerarTChegadaRelogio();
-		// Gerar a 4a coluna
-		gerarTServico(10, 1);
-		// Gerar a 5a coluna
-		gerarTInicioRoteamento();
-		// Gerar a 6a coluna
-		gerarTPacoteFilaRoteador();
-		// Gerar a 7a coluna
-		gerarTFinalRoteamentoRelogio();
-		// Gerar a 8a coluna
-		gerarTPacoteRoteador();
-		// Gerar a 9a coluna
-		gerarTLivreRoteador();
+	/**
+	 * Deine os valores dos tempos da ultima chegada.
+	 * 
+	 * @param tDeseAUltimaChegada
+	 *            Lista com os tempos dos tempos da última chegada.
+	 */
+	public void settDeseAUltimaChegada(List<Double> tDeseAUltimaChegada) {
+		if (tDeseAUltimaChegada != null && tDeseAUltimaChegada.size() <= 20)
+			this.tDeseAUltimaChegada = tDeseAUltimaChegada;
+		else
+			System.out.println("Foi passada uma lista vazia ou o tamnho da lista é maior que 20.");
+	}
 
+	/**
+	 * Define os valores dos tempos de serviço.
+	 * 
+	 * @param tServico
+	 *            Lista com os tempos de serviço.
+	 */
+	public void settServico(List<Double> tServico) {
+		if (tServico != null && tServico.size() <= 20)
+			this.tServico = tServico;
+		else
+			System.out.println("Foi passada uma lista vazia ou o tamnho da lista é maior que 20.");
+	}
+
+	/**
+	 * Faz a simulação de acordo com os tempos.
+	 * 
+	 * @param tServico
+	 *            Tempo de serviço.
+	 * @param tDeseAUltimaChegada
+	 *            Tempo de desde a ultima chegada.
+	 */
+	public void gerarSimulacao(List<Double> tDeseAUltimaChegada, List<Double> tServico) {
+		settDeseAUltimaChegada(tDeseAUltimaChegada);
+		settServico(tServico);
+		gerarSimulacao();
+	}
+
+	/**
+	 * Faz a simulação
+	 */
+	public void gerarSimulacao() {
+		gerarTChegadaRelogio(); // 3a coluna
+		gerarTInicioDoServiço(); // 5a coluna
+		gerarTDoClienteNaFila(); // 6a coluna
+		gerarTFinalDoAtendimentoNoRelogio(); // 7a coluna
+		gerarTDoClienteNoSitema(); // 8a coluna
+		gerarTLivreDoCaixa(); // 9a Coluna
+	}
+
+	/**
+	 * Gera o tempo de chegada no relógio que é a 3a coluna da tabela.
+	 */
+	private void gerarTChegadaRelogio() {
+		this.tChegadaRelogio = new ArrayList<>();
+
+		// O tempo desde a última chegada no relógio do 1o cliente é igual ao
+		// tempo de chegada no relógio do 1o cliente
+		tChegadaRelogio.add(tDeseAUltimaChegada.get(0));
+
+		// TCR_i = TCU_i + TCR_i-1
+		for (int i = 1; i < this.tDeseAUltimaChegada.size(); i++) {
+			this.tChegadaRelogio.add(tDeseAUltimaChegada.get(i) + tChegadaRelogio.get(i - 1));
+		}
+	}
+
+	/**
+	 * Gera o tempo de inicio do serviço é a 5a coluna na tabela.
+	 */
+	private void gerarTInicioDoServiço() {
+		this.tInicioServico = new ArrayList<>();
+
+		// O tempo de inicio de serviço do 1o cliente é igual ao tempo de
+		// chegada no relógio do 1o cliente.
+		this.tInicioServico.add(this.tChegadaRelogio.get(0));
+
+		for (int i = 1; i < this.tChegadaRelogio.size(); i++) {
+			// Calcula o tempo de inicio do serviço
+			double tis = this.tInicioServico.get(i - 1) + this.tServico.get(i - 1);
+
+			// Se o tempo de inicio do serviço for menor que o tempo tempo de
+			// chegada no relógio.
+			if (tis <= tChegadaRelogio.get(i)) {
+				// Então o tempo de inicio do serviço é igual ao tempo de
+				// chegada no relógio.
+				tInicioServico.add(tChegadaRelogio.get(i));
+			} else {
+				// Se não o tempo incio de serviço é igual ao que foi calculado
+				// na varáivel tis.
+				tInicioServico.add(tis);
+			}
+		}
+	}
+
+	/**
+	 * Tempo do cliente na fila é a 6a coluna na tabela.
+	 */
+	private void gerarTDoClienteNaFila() {
+		tNaFila = new ArrayList<>();
+
+		for (int i = 0; i < this.tDeseAUltimaChegada.size(); i++) {
+			// O tempo do pacote na fila do roteador = tempo de inicio do
+			// roteamento - tempo de de chegada no relogio
+			tNaFila.add(tInicioServico.get(i) - tChegadaRelogio.get(i));
+		}
+	}
+
+	/**
+	 * Gera o tempo final do atendimento no relógio, é a 7a coluna na tabela.
+	 */
+	private void gerarTFinalDoAtendimentoNoRelogio() {
+		tFinalRelogio = new ArrayList<>();
+
+		for (int i = 0; i < this.tDeseAUltimaChegada.size(); i++) {
+			// Tempo final do atendimento no relogio = tempo de inicio do
+			// serviço + tempo de serviço
+			this.tFinalRelogio.add(this.tInicioServico.get(i) + this.tServico.get(i));
+		}
+	}
+
+	/**
+	 * Gera o tempo do cliente no banco, é a 8a coluna na tabela.
+	 */
+	private void gerarTDoClienteNoSitema() {
+
+		tClienteNoBanco = new ArrayList<>();
+
+		for (int i = 0; i < this.tDeseAUltimaChegada.size(); i++) {
+			// Tempo do cliente no banco é igual o tempo de serviço mais o tempo
+			// do cliente na fila.
+			this.tClienteNoBanco.add(tNaFila.get(i) + tServico.get(i));
+		}
+	}
+
+	/**
+	 * Gera Tempo livre do Caixa do banco ou tempo que o Caixa ficou ocupado, é
+	 * 9a coluna da tabela.
+	 */
+	private void gerarTLivreDoCaixa() {
+		this.tLivreDoCaixa = new ArrayList<>(this.numeroDeClientes);
+
+		this.tLivreDoCaixa.add(tInicioServico.get(0));
+		for (int i = 1; i < this.numeroDeClientes; i++) {
+			// Tempo livre é igual ao tempo do inicio do serviço menos o tempo
+			// final do serviço do cliente anterior.
+			this.tLivreDoCaixa.add(this.tInicioServico.get(i) - this.tFinalRelogio.get(i - 1));
+		}
 	}
 
 	private void gerarTabela() {
@@ -77,121 +209,7 @@ public class SimulacaoFilaBanco {
 		this.tabela.add(tClienteNoBanco);
 		this.tabela.add(tLivreDoCaixa);
 	}
-
-	public List<List<Double>> getTabela() {
-		return tabela;
-	}
-
-	// Gera a 2a coluna - Tempo desde a Ãºltima chegada do pacote anterior
-	// (microssegundos)
-	private void gerarTDesdeUltimaChegadaPacote(double media) {
-
-		GeradorVariavelAleatoria gva = new GeradorVariavelAleatoria();
-		tDeseAUltimaChegada = new ArrayList<>(this.numeroDeClientes);
-
-		for (int i = 0; i < this.numeroDeClientes; i++) {
-			tDeseAUltimaChegada.add(gva.nextInverseTransformation(media));
-		}
-
-	}
-
-	// Gera a 3a Coluna - Tempo de chegada no relÃ³gio
-	private void gerarTChegadaRelogio() {
-		tChegadaRelogio = new ArrayList<>(this.numeroDeClientes);
-
-		tChegadaRelogio.add(tDeseAUltimaChegada.get(0));
-
-		for (int i = 1; i < this.numeroDeClientes; i++) {
-			tChegadaRelogio.add(tDeseAUltimaChegada.get(i) + tChegadaRelogio.get(i - 1));
-		}
-	}
-
-	// Gera a 4a coluna - Tempo de serviÃ§o ou tempo de roteamento
-	// (microssegundos)
-	private void gerarTServico(double media, double desvioPadrao) {
-
-		GeradorVariavelAleatoria gva = new GeradorVariavelAleatoria();
-		tServico = new ArrayList<>(this.numeroDeClientes);
-
-		for (int i = 0; i < this.numeroDeClientes; i++) {
-			tServico.add(gva.nextRejectionMethod(media, desvioPadrao));
-		}
-
-	}
-
-	// Gera a 5a coluna - Tempo de inÃ­cio do roteamento (microssegundos)
-	private void gerarTInicioRoteamento() {
-		tInicioServico = new ArrayList<>(this.numeroDeClientes);
-
-		tInicioServico.add(tChegadaRelogio.get(0));
-
-		for (int i = 1; i < this.numeroDeClientes; i++) {
-			// Se a soma do tempo de serviÃ§o mais o tempo do inicio do
-			// roteamento, anteriror, for <= ao tempo de chegada no relogio
-			// entÃ£o
-			if (tServico.get(i - 1) + tInicioServico.get(i - 1) <= tChegadaRelogio.get(i)) {
-				// o tempo de inicio do roteamento Ã© igual ao tempo de chegada
-				// do relogio
-				tInicioServico.add(tChegadaRelogio.get(i));
-			} else {
-				// Se nÃ£o, tempo do inicio do roteamento Ã© a soma do tempo de
-				// serviÃ§o anterior mais o tempo de inicio do roteamento
-				// anterior
-				tInicioServico.add(tServico.get(i - 1) + tInicioServico.get(i - 1));
-			}
-
-		}
-	}
-
-	// Gera a 6a coluna - Tempo do pacote na fila do roteador (microssegundos)
-	private void gerarTPacoteFilaRoteador() {
-		tNaFila = new ArrayList<>(this.numeroDeClientes);
-
-		for (int i = 0; i < this.numeroDeClientes; i++) {
-			// O tempo do pacote na fila do roteador = tempo de inicio do
-			// roteamento - tempo de dchegada no relogio
-			tNaFila.add(tInicioServico.get(i) - tChegadaRelogio.get(i));
-		}
-	}
-
-	// Gera a 7a coluna - Tempo final do roteamento no relÃ³gio
-	private void gerarTFinalRoteamentoRelogio() {
-		tFinalRelogio = new ArrayList<>(this.numeroDeClientes);
-
-		for (int i = 0; i < this.numeroDeClientes; i++) {
-			// Tempo final do roteamento no relogio = tempo de inicio do
-			// roteamento + tempo de serviÃ§o
-			tFinalRelogio.add(tInicioServico.get(i) + tServico.get(i));
-
-		}
-	}
-
-	// Gera a 8a coluna - 8) Tempo do pacote no roteador (microssegundos), ou
-	// seja, fila + roteamento
-	private void gerarTPacoteRoteador() {
-
-		tClienteNoBanco = new ArrayList<>(this.numeroDeClientes);
-
-		for (int i = 0; i < this.numeroDeClientes; i++) {
-			// Tempo do pacote no roteador = Tempo do pacote na fila do roteador
-			// + tempo de roteamento
-			tClienteNoBanco.add(tNaFila.get(i) + tServico.get(i));
-		}
-	}
-
-	// Gera a 9a coluna - Tempo livre do servidor do roteador ou tempo que o
-	// servidor do roteador ficou ocupado (microssegundos)
-	private void gerarTLivreRoteador() {
-		tLivreDoCaixa = new ArrayList<>(this.numeroDeClientes);
-
-		tLivreDoCaixa.add(tInicioServico.get(0));
-		for (int i = 1; i < this.numeroDeClientes; i++) {
-			// Tempo livre do servidor = Tempo de inÃ­cio do roteamento - Tempo
-			// final do roteamento no relÃ³gio anterior
-			tLivreDoCaixa.add(tInicioServico.get(i) - tFinalRelogio.get(i - 1));
-		}
-	}
-
+	
 	// Exibi alguma coisa
 	public void exibir() {
 		for (int i = 0; i < this.numeroDeClientes; i++) {
@@ -213,11 +231,11 @@ public class SimulacaoFilaBanco {
 		Arquivo file = new Arquivo();
 		DecimalFormat quatroCasas = new DecimalFormat("0.0000");
 
-		file.escrverArquivo("No do pacote;" + "T desde a Ãºltima chegada do P anterior;" + "T de chegada no relÃ³gio;"
-				+ "T de serviÃ§o;" + "T de inÃ­cio do roteamento;" + "T do P na fila do roteador;"
-				+ "T final do roteamento no relÃ³gio;" + "T do P no roteador;" + "T livre do servidor do roteador\n");
+		file.escrverArquivo("Número do cliente;" + "Tempo desde a ultima chegada;" + "Tempo de chegada no relógio;"
+				+ "Tempo de serviço;" + "Tempo de início do serviço;" + "Tempo do cliente na fila do Banco;"
+				+ "Tempo final do atendimento relógio;" + "Tmpo do cliente no banco;" + "Tempo livre do caixa\n");
 
-		for (int i = 0; i < this.numeroDeClientes; i++) {
+		for (int i = 0; i < this.tDeseAUltimaChegada.size(); i++) {
 
 			file.escrverArquivo((i + 1 + ";"));
 			file.escrverArquivo(quatroCasas.format(tDeseAUltimaChegada.get(i)) + ";");
@@ -230,5 +248,9 @@ public class SimulacaoFilaBanco {
 			file.escrverArquivo(quatroCasas.format(tLivreDoCaixa.get(i)) + "\n");
 		}
 		file.fechar();
+	}
+
+	public List<List<Double>> getTabela() {
+		return tabela;
 	}
 }
