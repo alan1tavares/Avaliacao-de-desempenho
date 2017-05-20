@@ -2,12 +2,12 @@ package Principal;
 
 import java.io.IOException;
 
-import gerar.tabela.Tabela;
+import br.com.ads.simulacao.SimulacaoFilaBanco;
 
 public class Main {
 
 	public static void main(String[] args) throws IOException {
-		Tabela t = new Tabela();
+		SimulacaoFilaBanco t = new SimulacaoFilaBanco();
 		t.gerarArquivo();
 
 	}
