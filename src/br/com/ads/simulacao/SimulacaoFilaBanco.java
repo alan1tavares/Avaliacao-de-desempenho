@@ -39,12 +39,12 @@ public class SimulacaoFilaBanco {
 	 * @param numeroDeClientes
 	 *            Quantidades de clientes que será feita asimulação
 	 */
-	public SimulacaoFilaBanco(int numeroDeClientes) {
-		if (numeroDeClientes <= this. MAXIMO_DE_CLIENTES)
-			this.numeroDeClientes = numeroDeClientes;
-		else
-			System.out.println("Tem que ser no máximo 20");
-	}
+//	public SimulacaoFilaBanco(int numeroDeClientes) {
+//		if (numeroDeClientes <= this. MAXIMO_DE_CLIENTES)
+//			this.numeroDeClientes = numeroDeClientes;
+//		else
+//			System.out.println("Tem que ser no máximo 20");
+//	}
 
 	/**
 	 * Deine os valores dos tempos da ultima chegada.
@@ -53,7 +53,7 @@ public class SimulacaoFilaBanco {
 	 *            Lista com os tempos dos tempos da última chegada.
 	 */
 	public void settDeseAUltimaChegada(List<Double> tDeseAUltimaChegada) {
-		if (tDeseAUltimaChegada != null && tDeseAUltimaChegada.size() <= 20)
+		if (tDeseAUltimaChegada != null && tDeseAUltimaChegada.size() <= this.MAXIMO_DE_CLIENTES)
 			this.tDeseAUltimaChegada = tDeseAUltimaChegada;
 		else
 			System.out.println("Foi passada uma lista vazia ou o tamnho da lista é maior que 20.");
@@ -66,7 +66,7 @@ public class SimulacaoFilaBanco {
 	 *            Lista com os tempos de serviço.
 	 */
 	public void settServico(List<Double> tServico) {
-		if (tServico != null && tServico.size() <= 20)
+		if (tServico != null && tServico.size() <= this.MAXIMO_DE_CLIENTES)
 			this.tServico = tServico;
 		else
 			System.out.println("Foi passada uma lista vazia ou o tamnho da lista é maior que 20.");
@@ -106,7 +106,7 @@ public class SimulacaoFilaBanco {
 
 		// O tempo desde a última chegada no relógio do 1o cliente é igual ao
 		// tempo de chegada no relógio do 1o cliente
-		tChegadaRelogio.add(tDeseAUltimaChegada.get(0));
+		this.tChegadaRelogio.add(tDeseAUltimaChegada.get(0));
 
 		// TCR_i = TCU_i + TCR_i-1
 		for (int i = 1; i < this.tDeseAUltimaChegada.size(); i++) {
@@ -190,7 +190,7 @@ public class SimulacaoFilaBanco {
 		this.tLivreDoCaixa = new ArrayList<>(this.numeroDeClientes);
 
 		this.tLivreDoCaixa.add(tInicioServico.get(0));
-		for (int i = 1; i < this.numeroDeClientes; i++) {
+		for (int i = 1; i < this.tDeseAUltimaChegada.size(); i++) {
 			// Tempo livre é igual ao tempo do inicio do serviço menos o tempo
 			// final do serviço do cliente anterior.
 			this.tLivreDoCaixa.add(this.tInicioServico.get(i) - this.tFinalRelogio.get(i - 1));
@@ -212,7 +212,8 @@ public class SimulacaoFilaBanco {
 	
 	// Exibi alguma coisa
 	public void exibir() {
-		for (int i = 0; i < this.numeroDeClientes; i++) {
+		System.out.println(this.tChegadaRelogio);
+		for (int i = 0; i < this.tDeseAUltimaChegada.size(); i++) {
 			DecimalFormat quatroCasas = new DecimalFormat("0.0000");
 			System.out.print(i + "   ");
 			System.out.print(quatroCasas.format(tDeseAUltimaChegada.get(i)) + "   ");
@@ -229,8 +230,8 @@ public class SimulacaoFilaBanco {
 
 	public void gerarArquivo() throws IOException {
 		Arquivo file = new Arquivo();
-		DecimalFormat quatroCasas = new DecimalFormat("0.0000");
-
+		DecimalFormat quatroCasas = new DecimalFormat("0.0");
+		
 		file.escrverArquivo("Número do cliente;" + "Tempo desde a ultima chegada;" + "Tempo de chegada no relógio;"
 				+ "Tempo de serviço;" + "Tempo de início do serviço;" + "Tempo do cliente na fila do Banco;"
 				+ "Tempo final do atendimento relógio;" + "Tmpo do cliente no banco;" + "Tempo livre do caixa\n");
